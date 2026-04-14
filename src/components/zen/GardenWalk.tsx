@@ -1,61 +1,24 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GardenScene from "./GardenScene";
-import type { QuizAnswer } from "./QuizScreen";
+import type { PsychProfile } from "./quizAnalysis";
+import { getPersonalizedMessages } from "./quizAnalysis";
 
 interface GardenWalkProps {
-  answers: QuizAnswer[];
+  profile: PsychProfile;
   onComplete: () => void;
 }
 
-const healingMessages: Record<string, string[]> = {
-  calm: [
-    "당신의 고요함은 이미 깊은 곳에 존재합니다",
-    "바람이 지나가듯, 모든 것은 흘러갑니다",
-    "이 순간, 당신은 충분합니다",
-    "고요함 속에서 당신의 본래 모습을 만나세요",
-  ],
-  warmth: [
-    "당신은 따뜻한 빛을 받을 자격이 있습니다",
-    "상처 위에 내리는 햇살처럼, 치유는 찾아옵니다",
-    "마음이 따뜻해질 때, 세상도 따뜻해집니다",
-    "당신의 부드러움은 강함입니다",
-  ],
-  strength: [
-    "흔들림 속에서도 당신의 뿌리는 깊습니다",
-    "산은 바람에 흔들리지 않습니다",
-    "지금의 시련은 내일의 지혜가 됩니다",
-    "당신 안의 힘을 믿으세요",
-  ],
-  freedom: [
-    "놓아줄 때, 비로소 자유가 찾아옵니다",
-    "새처럼, 하늘에는 경계가 없습니다",
-    "과거의 무게를 내려놓으세요",
-    "당신의 길은 이미 열려 있습니다",
-  ],
-};
-
-function getMessageSet(answers: QuizAnswer[]): string[] {
-  // Determine dominant theme from answers
-  const lastAnswer = answers[answers.length - 1]?.answerIndex ?? 0;
-  const thirdAnswer = answers[2]?.answerIndex ?? 0;
-
-  if (thirdAnswer === 0) return healingMessages.calm;
-  if (thirdAnswer === 1) return healingMessages.warmth;
-  if (lastAnswer === 0 || lastAnswer === 2) return healingMessages.freedom;
-  return healingMessages.strength;
-}
-
-const GardenWalk = ({ answers, onComplete }: GardenWalkProps) => {
+const GardenWalk = ({ profile, onComplete }: GardenWalkProps) => {
   const [progress, setProgress] = useState(0);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(-1);
   const [showMessage, setShowMessage] = useState(false);
 
-  const messages = getMessageSet(answers);
+  const messages = getPersonalizedMessages(profile);
 
-  // Progress animation: 0 → 1 over ~20 seconds
+  // Progress animation: 0 → 1 over ~24 seconds (slightly longer for 5 messages)
   useEffect(() => {
-    const duration = 22000;
+    const duration = 26000;
     const start = Date.now();
     let animFrame: number;
 
@@ -75,9 +38,9 @@ const GardenWalk = ({ answers, onComplete }: GardenWalkProps) => {
     return () => cancelAnimationFrame(animFrame);
   }, [onComplete]);
 
-  // Show messages at intervals
+  // Show messages at intervals (5 messages now)
   useEffect(() => {
-    const thresholds = [0.15, 0.35, 0.55, 0.72];
+    const thresholds = [0.1, 0.25, 0.42, 0.58, 0.74];
     const idx = thresholds.filter((t) => progress >= t).length - 1;
 
     if (idx >= 0 && idx !== currentMessageIndex) {
@@ -89,13 +52,10 @@ const GardenWalk = ({ answers, onComplete }: GardenWalkProps) => {
 
   return (
     <div className="fixed inset-0 overflow-hidden">
-      {/* 3D Garden */}
       <GardenScene progress={progress} />
 
-      {/* Overlay gradient for text readability */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/30 via-transparent to-transparent" />
 
-      {/* Healing messages */}
       <AnimatePresence>
         {showMessage && currentMessageIndex >= 0 && currentMessageIndex < messages.length && (
           <motion.div
@@ -113,7 +73,7 @@ const GardenWalk = ({ answers, onComplete }: GardenWalkProps) => {
         )}
       </AnimatePresence>
 
-      {/* Progress indicator — subtle line */}
+      {/* Progress indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-32">
         <div className="h-px bg-foreground/10">
           <motion.div
@@ -126,7 +86,6 @@ const GardenWalk = ({ answers, onComplete }: GardenWalkProps) => {
         </p>
       </div>
 
-      {/* Bright flash at end */}
       {progress > 0.9 && (
         <motion.div
           className="absolute inset-0 bg-white pointer-events-none z-20"

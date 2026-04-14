@@ -4,15 +4,17 @@ import StartScreen from "@/components/zen/StartScreen";
 import QuizScreen, { type QuizAnswer } from "@/components/zen/QuizScreen";
 import GardenWalk from "@/components/zen/GardenWalk";
 import FinaleScreen from "@/components/zen/FinaleScreen";
+import { analyzeQuiz, type PsychProfile } from "@/components/zen/quizAnalysis";
 
 type AppPhase = "start" | "quiz" | "garden" | "finale";
 
 const Index = () => {
   const [phase, setPhase] = useState<AppPhase>("start");
-  const [answers, setAnswers] = useState<QuizAnswer[]>([]);
+  const [profile, setProfile] = useState<PsychProfile | null>(null);
 
   const handleQuizComplete = useCallback((quizAnswers: QuizAnswer[]) => {
-    setAnswers(quizAnswers);
+    const result = analyzeQuiz(quizAnswers);
+    setProfile(result);
     setPhase("garden");
   }, []);
 
@@ -21,7 +23,7 @@ const Index = () => {
   }, []);
 
   const handleRestart = useCallback(() => {
-    setAnswers([]);
+    setProfile(null);
     setPhase("start");
   }, []);
 
@@ -38,14 +40,14 @@ const Index = () => {
             <QuizScreen onComplete={handleQuizComplete} />
           </motion.div>
         )}
-        {phase === "garden" && (
+        {phase === "garden" && profile && (
           <motion.div key="garden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.5 }}>
-            <GardenWalk answers={answers} onComplete={handleGardenComplete} />
+            <GardenWalk profile={profile} onComplete={handleGardenComplete} />
           </motion.div>
         )}
-        {phase === "finale" && (
+        {phase === "finale" && profile && (
           <motion.div key="finale" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}>
-            <FinaleScreen onRestart={handleRestart} />
+            <FinaleScreen profile={profile} onRestart={handleRestart} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import type { PsychProfile } from "./quizAnalysis";
+import { getFinaleMessage, getRecommendedLandscape } from "./quizAnalysis";
 
 interface FinaleScreenProps {
+  profile: PsychProfile;
   onRestart: () => void;
 }
 
@@ -15,13 +18,11 @@ const landscapes = [
     accentColor: "text-blue-900",
     horizonElements: (
       <>
-        {/* Sun reflection on water */}
         <motion.div
           className="absolute bottom-[48%] left-1/2 -translate-x-1/2 w-40 h-1 bg-yellow-200/50 rounded-full blur-sm"
           animate={{ scaleX: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 3, repeat: Infinity }}
         />
-        {/* Gentle waves */}
         {Array.from({ length: 5 }).map((_, i) => (
           <motion.div
             key={i}
@@ -43,21 +44,16 @@ const landscapes = [
     accentColor: "text-slate-800",
     horizonElements: (
       <>
-        {/* Mirror reflection effect */}
         <motion.div
           className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-blue-100/40 to-transparent"
           animate={{ opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 5, repeat: Infinity }}
         />
-        {/* Distant clouds reflected */}
         {Array.from({ length: 3 }).map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-20 h-2 bg-white/30 rounded-full blur-md"
-            style={{
-              left: `${20 + i * 25}%`,
-              bottom: `${35 + i * 3}%`,
-            }}
+            style={{ left: `${20 + i * 25}%`, bottom: `${35 + i * 3}%` }}
             animate={{ x: [0, 15, 0] }}
             transition={{ duration: 8 + i * 2, repeat: Infinity }}
           />
@@ -74,23 +70,15 @@ const landscapes = [
     accentColor: "text-emerald-900",
     horizonElements: (
       <>
-        {/* Rolling hills silhouette */}
         <svg
           className="absolute bottom-[30%] left-0 w-full"
           viewBox="0 0 1200 200"
           preserveAspectRatio="none"
           style={{ height: "30%" }}
         >
-          <path
-            d="M0,150 Q200,50 400,120 Q600,30 800,100 Q1000,60 1200,130 L1200,200 L0,200 Z"
-            fill="rgba(34,197,94,0.3)"
-          />
-          <path
-            d="M0,170 Q300,80 500,140 Q700,70 900,130 Q1100,90 1200,160 L1200,200 L0,200 Z"
-            fill="rgba(22,163,74,0.4)"
-          />
+          <path d="M0,150 Q200,50 400,120 Q600,30 800,100 Q1000,60 1200,130 L1200,200 L0,200 Z" fill="rgba(34,197,94,0.3)" />
+          <path d="M0,170 Q300,80 500,140 Q700,70 900,130 Q1100,90 1200,160 L1200,200 L0,200 Z" fill="rgba(22,163,74,0.4)" />
         </svg>
-        {/* Swaying grass */}
         {Array.from({ length: 8 }).map((_, i) => (
           <motion.div
             key={i}
@@ -105,11 +93,10 @@ const landscapes = [
   },
 ];
 
-const FinaleScreen = ({ onRestart }: FinaleScreenProps) => {
-  const landscape = useMemo(
-    () => landscapes[Math.floor(Math.random() * landscapes.length)],
-    []
-  );
+const FinaleScreen = ({ profile, onRestart }: FinaleScreenProps) => {
+  const landscapeIndex = useMemo(() => getRecommendedLandscape(profile), [profile]);
+  const landscape = landscapes[landscapeIndex];
+  const finaleMsg = useMemo(() => getFinaleMessage(profile), [profile]);
 
   return (
     <motion.div
@@ -118,10 +105,8 @@ const FinaleScreen = ({ onRestart }: FinaleScreenProps) => {
       animate={{ opacity: 1 }}
       transition={{ duration: 2 }}
     >
-      {/* Sky */}
       <div className={`absolute inset-0 ${landscape.skyColor}`} />
 
-      {/* Sun */}
       <motion.div
         className="absolute top-[15%] left-1/2 -translate-x-1/2"
         initial={{ opacity: 0, scale: 0.5 }}
@@ -132,15 +117,10 @@ const FinaleScreen = ({ onRestart }: FinaleScreenProps) => {
         <div className="absolute inset-2 rounded-full bg-yellow-50 blur-md opacity-80" />
       </motion.div>
 
-      {/* Landscape-specific elements */}
       {landscape.horizonElements}
 
-      {/* Ground */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-b ${landscape.groundGradient}`}
-      />
+      <div className={`absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-b ${landscape.groundGradient}`} />
 
-      {/* Content overlay */}
       <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
         <motion.div
           className="text-center"
@@ -151,13 +131,11 @@ const FinaleScreen = ({ onRestart }: FinaleScreenProps) => {
           <p className="text-xs tracking-[0.5em] text-slate-600 mb-4">
             {landscape.subtitle}
           </p>
-          <h1
-            className={`text-3xl md:text-5xl font-serif font-light ${landscape.accentColor} mb-3`}
-          >
-            内なる平和
+          <h1 className={`text-3xl md:text-5xl font-serif font-light ${landscape.accentColor} mb-3`}>
+            {finaleMsg.title}
           </h1>
           <p className={`text-sm ${landscape.accentColor}/70 tracking-widest mb-2`}>
-            내면의 평화
+            {finaleMsg.subtitle}
           </p>
           <p className="text-xs text-slate-500 italic mt-4 max-w-xs mx-auto leading-relaxed">
             "{landscape.name}이 당신 앞에 펼쳐집니다.
