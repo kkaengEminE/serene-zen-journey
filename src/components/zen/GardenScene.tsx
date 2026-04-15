@@ -197,7 +197,7 @@ function WaterDrops({ progress }: { progress: number }) {
     const posAttr = ref.current.geometry.attributes.position;
     for (let i = 0; i < count; i++) {
       const y = posAttr.getY(i);
-      posAttr.setY(i, y - spd[i] * delta);
+      posAttr.setY(i, y - speeds[i] * delta);
       if (y < -1.5) {
         posAttr.setY(i, 2 + Math.random() * 2);
       }
@@ -205,7 +205,6 @@ function WaterDrops({ progress }: { progress: number }) {
     posAttr.needsUpdate = true;
   });
 
-  const spd = speeds;
   const opacity = Math.min(progress * 2, 0.5);
 
   return (
